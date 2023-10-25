@@ -4,6 +4,7 @@ import com.slcbudget.eventmanager.domain.ERole;
 import com.slcbudget.eventmanager.domain.RoleEntity;
 import com.slcbudget.eventmanager.domain.UserEntity;
 import com.slcbudget.eventmanager.domain.dto.CreateUserDTO;
+import com.slcbudget.eventmanager.domain.dto.EditUserDTO;
 import com.slcbudget.eventmanager.persistence.UserRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +17,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@CrossOrigin //TODO AVERIGUAR
+//@CrossOrigin //TODO AVERIGUAR
 @RestController
 @RequestMapping("/user")
 public class UserController {
@@ -37,8 +38,8 @@ public class UserController {
         return userRepository.findById(id).get();
     }
 
-    @PutMapping("/update/{id}")
-    public ResponseEntity<String> updateUser(@PathVariable Long id, @RequestBody UserEntity updatedUser) {
+    @PatchMapping("/update/{id}")
+    public ResponseEntity<String> updateUser(@PathVariable Long id, @RequestBody EditUserDTO updatedUser) {
         // Recuperar el usuario existente de la base de datos
         Optional<UserEntity> optionalUser = userRepository.findById(id);
 
@@ -46,11 +47,10 @@ public class UserController {
             UserEntity existingUser = optionalUser.get();
 
             // Actualizar los campos del usuario con los nuevos valores
-            existingUser.setEmail(updatedUser.getEmail());
             existingUser.setName(updatedUser.getName());
             existingUser.setLastName(updatedUser.getLastName());
             existingUser.setUsername(updatedUser.getUsername());
-            existingUser.setPassword(updatedUser.getPassword());
+            existingUser.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
 
             // Guardar el usuario actualizado en la base de datos
             userRepository.save(existingUser);
