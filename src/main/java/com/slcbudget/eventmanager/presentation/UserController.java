@@ -6,12 +6,16 @@ import com.slcbudget.eventmanager.domain.UserEntity;
 import com.slcbudget.eventmanager.domain.dto.CreateUserDTO;
 import com.slcbudget.eventmanager.domain.dto.EditUserDTO;
 import com.slcbudget.eventmanager.persistence.UserRepository;
+import com.slcbudget.eventmanager.service.StorageService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -28,6 +32,13 @@ public class UserController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private MediaController mediaController; // Suponiendo que "FileController" es el controlador de archivos
+
+
+    @Autowired
+    private StorageService storageService;
+
     @GetMapping("/all")
     public List <UserEntity> getAllUsers() {
         return (List<UserEntity>) userRepository.findAll();
@@ -36,6 +47,11 @@ public class UserController {
     @GetMapping("/{id}")
     public UserEntity getUserById(@PathVariable Long id) {
         return userRepository.findById(id).get();
+    }
+
+    @GetMapping("/email/{email}")
+    public UserEntity getUserByEmail(@PathVariable String email) {
+        return userRepository.findByEmail(email).get();
     }
 
     @PatchMapping("/update/{id}")
@@ -63,7 +79,15 @@ public class UserController {
 
 
     @PostMapping("/signup")
-    public ResponseEntity<?> createUser(@Valid @RequestBody CreateUserDTO createUserDTO){
+    public ResponseEntity<?> createUser(@Valid @RequestPart("profileImage") MultipartFile profileImage,
+                                        @RequestPart("createUserDTO") CreateUserDTO createUserDTO) {
+
+        String imageUrl = null;
+        try {
+            imageUrl = storageService.store(profileImage);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al guardar la imagen de perfil");
+        }
 
         Set<RoleEntity> roles = createUserDTO.getRoles().stream()
                 .map(role -> RoleEntity.builder()
@@ -77,6 +101,7 @@ public class UserController {
                 .email(createUserDTO.getEmail())
                 .name(createUserDTO.getName())
                 .lastName(createUserDTO.getLastName())
+                .profileImage(imageUrl)
                 .roles(roles)
                 .build();
 
@@ -84,6 +109,7 @@ public class UserController {
 
         return ResponseEntity.ok(userEntity);
     }
+
 
     @DeleteMapping("/delete/{id}")
     public String deleteUser(@PathVariable("id") String id){

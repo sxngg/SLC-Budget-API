@@ -1,11 +1,13 @@
 package com.slcbudget.eventmanager.domain.dto;
 
+import jakarta.persistence.Lob;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Set;
 
@@ -24,5 +26,7 @@ public class CreateUserDTO {
     private String username;
     @NotBlank
     private String password;
+    @NotBlank
+    private MultipartFile profileImage;
     private Set<String> roles;
 }

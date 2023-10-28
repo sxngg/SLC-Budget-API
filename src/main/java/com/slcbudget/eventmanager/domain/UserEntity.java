@@ -38,6 +38,9 @@ public class UserEntity {
     @NotBlank
     private String password;
 
+    @Column(name="profile_image")
+    private String profileImage;
+
     /**
      * El Set no nos permite tener elementos duplicados, por eso lo usamos
      */
