@@ -3,6 +3,7 @@ package com.slcbudget.eventmanager.presentation;
 import com.slcbudget.eventmanager.domain.ERole;
 import com.slcbudget.eventmanager.domain.RoleEntity;
 import com.slcbudget.eventmanager.domain.UserEntity;
+import com.slcbudget.eventmanager.domain.dto.AddContactDTO;
 import com.slcbudget.eventmanager.domain.dto.CreateUserDTO;
 import com.slcbudget.eventmanager.domain.dto.EditUserDTO;
 import com.slcbudget.eventmanager.persistence.UserRepository;
@@ -11,6 +12,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,8 +35,7 @@ public class UserController {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private MediaController mediaController; // Suponiendo que "FileController" es el controlador de archivos
-
+    private MediaController mediaController;
 
     @Autowired
     private StorageService storageService;
@@ -115,5 +116,40 @@ public class UserController {
     public String deleteUser(@PathVariable("id") String id){
         userRepository.deleteById(Long.parseLong(id));
         return "Se ha borrado el user con id".concat(id);
+    }
+
+    @GetMapping("users/{userId}/contacts")
+    public ResponseEntity<Set<UserEntity>> getContactsByUserId(@PathVariable Long userId) {
+
+        Optional<UserEntity> user = userRepository.findById(userId);
+
+        if (user.isPresent()) {
+            Set<UserEntity> contacts = user.get().getContacts();
+            return ResponseEntity.ok(contacts);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PostMapping("users/{userId}/add-contact")
+    public ResponseEntity<?> addContact(@PathVariable Long userId, @RequestBody AddContactDTO contactId) {
+
+        Optional<UserEntity> userOptional = userRepository.findById(userId);
+        Optional<UserEntity> contactOptional = userRepository.findById(contactId.contactId());
+
+        if (userOptional.isPresent() && contactOptional.isPresent()) {
+            UserEntity user = userOptional.get();
+            UserEntity contact = contactOptional.get();
+
+            if (user.getId().equals(contact.getId())) {
+                return ResponseEntity.badRequest().body("No puedes agregarte a ti mismo");
+            }
+            user.getContacts().add(contact);
+            userRepository.save(user);
+
+            return ResponseEntity.ok("Co0acto agregado con éxito");
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
