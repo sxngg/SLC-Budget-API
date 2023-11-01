@@ -56,12 +56,24 @@ public class UserController {
     }
 
     @PatchMapping("/update/{id}")
-    public ResponseEntity<String> updateUser(@PathVariable Long id, @RequestBody EditUserDTO updatedUser) {
+    public ResponseEntity<String> updateUser(@PathVariable Long id,
+                                             @RequestPart EditUserDTO updatedUser,
+                                             @RequestPart(required = false) MultipartFile profileImage) {
         // Recuperar el usuario existente de la base de datos
         Optional<UserEntity> optionalUser = userRepository.findById(id);
 
         if (optionalUser.isPresent()) {
             UserEntity existingUser = optionalUser.get();
+
+            if (profileImage != null && !profileImage.isEmpty()) {
+                try {
+                    String imageName = storageService.store(profileImage);
+
+                    existingUser.setProfileImage(imageName);
+                } catch (IOException e) {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al almacenar la imagen");
+                }
+            }
 
             // Actualizar los campos del usuario con los nuevos valores
             existingUser.setName(updatedUser.getName());
