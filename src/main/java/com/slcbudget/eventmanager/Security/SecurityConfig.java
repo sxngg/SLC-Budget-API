@@ -64,6 +64,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers("/user/signup").permitAll();
                     auth.requestMatchers("/media/**").permitAll();
+                    auth.requestMatchers("/auth/validateToken").permitAll();
                     auth.anyRequest().authenticated();
                 })
                 .sessionManagement(session -> {
