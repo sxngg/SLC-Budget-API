@@ -95,6 +95,10 @@ public class UserController {
     public ResponseEntity<?> createUser(@Valid @RequestPart("profileImage") MultipartFile profileImage,
                                         @RequestPart("createUserDTO") CreateUserDTO createUserDTO) {
 
+        if (userRepository.existsByEmail(createUserDTO.getEmail())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("El correo electrónico ya está en uso.");
+        }
+
         String imageUrl = null;
         try {
             imageUrl = storageService.store(profileImage);
