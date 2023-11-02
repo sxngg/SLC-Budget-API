@@ -2,25 +2,12 @@ version: '3.9'
 
 services:
   slc_budget_app:
-      container_name: slc_budget_app
-      image: img-slc-app:1.0.0
-      build: .
-      ports:
-        - 8080:8080
-      environment:
-        - DATABASE_URL=jdbc:postgresql://slc_budget_db:5432/postgres
-        - DATABASE_USERNAME=postgres
-        - DATABASE_PASSWORD=postgres
-      depends_on:
-        - slc_budget_db
-        #Verifica que la db exista antes de montar la api
-
-  slc_budget_db:
-    container_name: slc_budget_db
-    image: postgres:12
+    container_name: slc_budget_app
+    image: img-slc-app:1.0.0
+    build: .
     ports:
-      - 5432:5432
+      - 8080:8080
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
+      - DATABASE_URL=jdbc:postgresql://slc-budget.cwyblvgboiei.us-east-1.rds.amazonaws.com:5432/postgres
+      - DATABASE_USERNAME=postgres
+      - DATABASE_PASSWORD=slc-budget1*
