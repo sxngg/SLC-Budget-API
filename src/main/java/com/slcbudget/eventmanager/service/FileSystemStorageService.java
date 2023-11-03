@@ -34,7 +34,7 @@ public class FileSystemStorageService implements StorageService {
         if (file.isEmpty()) {
             throw new RuntimeException("Failed to store empty file.");
         }
-        System.out.println("Llego a la implementacion");
+
         String filename = file.getOriginalFilename();
         Path destinationFile = rootLocation.resolve(Paths.get(filename))
                 .normalize().toAbsolutePath();
