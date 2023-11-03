@@ -1,15 +1,20 @@
 package com.slcbudget.eventmanager.presentation;
 
 import com.slcbudget.eventmanager.domain.ERole;
+import com.slcbudget.eventmanager.domain.Event;
 import com.slcbudget.eventmanager.domain.RoleEntity;
 import com.slcbudget.eventmanager.domain.UserEntity;
 import com.slcbudget.eventmanager.domain.dto.AddContactDTO;
 import com.slcbudget.eventmanager.domain.dto.CreateUserDTO;
 import com.slcbudget.eventmanager.domain.dto.EditUserDTO;
+import com.slcbudget.eventmanager.persistence.EventRepository;
 import com.slcbudget.eventmanager.persistence.UserRepository;
 import com.slcbudget.eventmanager.service.StorageService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.User;
@@ -39,6 +44,9 @@ public class UserController {
 
     @Autowired
     private StorageService storageService;
+
+    @Autowired
+    private EventRepository eventRepository;
 
     @GetMapping("/all")
     public List <UserEntity> getAllUsers() {
@@ -134,7 +142,7 @@ public class UserController {
         return "Se ha borrado el user con id".concat(id);
     }
 
-    @GetMapping("users/{userId}/contacts")
+    @GetMapping("{userId}/contacts")
     public ResponseEntity<Set<UserEntity>> getContactsByUserId(@PathVariable Long userId) {
 
         Optional<UserEntity> user = userRepository.findById(userId);
@@ -147,7 +155,7 @@ public class UserController {
         }
     }
 
-    @PostMapping("users/{userId}/add-contact")
+    @PostMapping("{userId}/add-contact")
     public ResponseEntity<?> addContact(@PathVariable Long userId, @RequestBody AddContactDTO contactId) {
 
         Optional<UserEntity> userOptional = userRepository.findById(userId);
@@ -167,5 +175,17 @@ public class UserController {
         } else {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @GetMapping("/{userId}/events")
+    public ResponseEntity<Page<Event>> getUserEvents(@PathVariable Long userId,
+        @PageableDefault(size = 3) Pageable pagination) {
+        
+        Page<Event> userEvents = eventRepository.findByOwnerId(userId, pagination);
+
+        if (userEvents.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(userEvents);
     }
 }
