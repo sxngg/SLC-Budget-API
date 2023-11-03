@@ -13,6 +13,7 @@ import com.slcbudget.eventmanager.service.StorageService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -26,9 +27,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
-//@CrossOrigin //TODO AVERIGUAR
 @RestController
 @RequestMapping("/user")
 public class UserController {
@@ -40,16 +41,13 @@ public class UserController {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private MediaController mediaController;
-
-    @Autowired
     private StorageService storageService;
 
     @Autowired
     private EventRepository eventRepository;
 
     @GetMapping("/all")
-    public List <UserEntity> getAllUsers() {
+    public List<UserEntity> getAllUsers() {
         return (List<UserEntity>) userRepository.findAll();
     }
 
@@ -65,8 +63,8 @@ public class UserController {
 
     @PatchMapping("/update/{id}")
     public ResponseEntity<String> updateUser(@PathVariable Long id,
-                                             @RequestPart EditUserDTO updatedUser,
-                                             @RequestPart(required = false) MultipartFile profileImage) {
+            @RequestPart EditUserDTO updatedUser,
+            @RequestPart(required = false) MultipartFile profileImage) {
         // Recuperar el usuario existente de la base de datos
         Optional<UserEntity> optionalUser = userRepository.findById(id);
 
@@ -98,10 +96,9 @@ public class UserController {
         }
     }
 
-
     @PostMapping("/signup")
     public ResponseEntity<?> createUser(@Valid @RequestPart("profileImage") MultipartFile profileImage,
-                                        @RequestPart("createUserDTO") CreateUserDTO createUserDTO) {
+            @RequestPart("createUserDTO") CreateUserDTO createUserDTO) {
 
         if (userRepository.existsByEmail(createUserDTO.getEmail())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("El correo electrónico ya está en uso.");
@@ -135,27 +132,32 @@ public class UserController {
         return ResponseEntity.ok(userEntity);
     }
 
-
     @DeleteMapping("/delete/{id}")
-    public String deleteUser(@PathVariable("id") String id){
+    public String deleteUser(@PathVariable("id") String id) {
         userRepository.deleteById(Long.parseLong(id));
         return "Se ha borrado el user con id".concat(id);
     }
 
-    @GetMapping("{userId}/contacts")
-    public ResponseEntity<Set<UserEntity>> getContactsByUserId(@PathVariable Long userId) {
+    @GetMapping("/contacts/{userId}")
+    public ResponseEntity<Page<UserEntity>> getContactsByUserId(@PathVariable Long userId,
+            @PageableDefault(size = 3) Pageable pagination) {
 
         Optional<UserEntity> user = userRepository.findById(userId);
 
         if (user.isPresent()) {
-            Set<UserEntity> contacts = user.get().getContacts();
-            return ResponseEntity.ok(contacts);
+            Set<UserEntity> contactsSet = user.get().getContacts();
+
+            List<UserEntity> contactsList = new ArrayList<>(contactsSet);
+
+            Page<UserEntity> contactsPage = new PageImpl<>(contactsList, pagination, contactsList.size());
+
+            return ResponseEntity.ok(contactsPage);
         } else {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.badRequest().build();
         }
     }
 
-    @PostMapping("{userId}/add-contact")
+    @PostMapping("add-contact/{userId}")
     public ResponseEntity<?> addContact(@PathVariable Long userId, @RequestBody AddContactDTO contactId) {
 
         Optional<UserEntity> userOptional = userRepository.findById(userId);
@@ -177,10 +179,10 @@ public class UserController {
         }
     }
 
-    @GetMapping("/{userId}/events")
+    @GetMapping("/events/{userId}")
     public ResponseEntity<Page<Event>> getUserEvents(@PathVariable Long userId,
-        @PageableDefault(size = 3) Pageable pagination) {
-        
+            @PageableDefault(size = 3) Pageable pagination) {
+
         Page<Event> userEvents = eventRepository.findByOwnerId(userId, pagination);
 
         if (userEvents.isEmpty()) {
