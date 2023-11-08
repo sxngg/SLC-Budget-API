@@ -7,6 +7,7 @@ import com.slcbudget.eventmanager.domain.UserEntity;
 import com.slcbudget.eventmanager.domain.dto.AddContactDTO;
 import com.slcbudget.eventmanager.domain.dto.CreateUserDTO;
 import com.slcbudget.eventmanager.domain.dto.EditUserDTO;
+import com.slcbudget.eventmanager.domain.dto.UserResponseDTO;
 import com.slcbudget.eventmanager.persistence.EventRepository;
 import com.slcbudget.eventmanager.persistence.UserRepository;
 import com.slcbudget.eventmanager.service.StorageService;
@@ -57,8 +58,17 @@ public class UserController {
     }
 
     @GetMapping("/email/{email}")
-    public UserEntity getUserByEmail(@PathVariable String email) {
-        return userRepository.findByEmail(email).get();
+    public ResponseEntity<UserResponseDTO> getUserByEmail(@PathVariable String email) {
+        Optional<UserEntity> user = userRepository.findByEmail(email);
+        if (user.isPresent()) {
+            UserEntity userEntity = user.get();
+            UserResponseDTO userResponse = new UserResponseDTO(userEntity.getId(), userEntity.getName(),
+                    userEntity.getLastName(), userEntity.getEmail(), userEntity.getUsername(),
+                    userEntity.getProfileImage());
+            return ResponseEntity.ok(userResponse);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PatchMapping("/update/{id}")
@@ -97,16 +107,17 @@ public class UserController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<?> createUser(@Valid @RequestPart("profileImage") MultipartFile profileImage,
+    public ResponseEntity<?> createUser(@Valid @RequestPart(required = false) MultipartFile profileImage,
             @RequestPart("createUserDTO") CreateUserDTO createUserDTO) {
 
         if (userRepository.existsByEmail(createUserDTO.getEmail())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("El correo electrónico ya está en uso.");
         }
-
         String imageUrl = null;
         try {
-            imageUrl = storageService.store(profileImage);
+            if (profileImage != null && !profileImage.isEmpty()) {
+                imageUrl = storageService.store(profileImage);
+            }
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al guardar la imagen de perfil");
         }
@@ -127,9 +138,13 @@ public class UserController {
                 .roles(roles)
                 .build();
 
-        userRepository.save(userEntity);
-
-        return ResponseEntity.ok(userEntity);
+        try {
+            userRepository.save(userEntity);
+            UserResponseDTO userResponseDTO = new UserResponseDTO(userEntity);
+            return ResponseEntity.ok(userResponseDTO);
+        } catch (Exception e) {
+          return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/delete/{id}")
@@ -139,17 +154,20 @@ public class UserController {
     }
 
     @GetMapping("/contacts/{userId}")
-    public ResponseEntity<Page<UserEntity>> getContactsByUserId(@PathVariable Long userId,
+    public ResponseEntity<Page<UserResponseDTO>> getContactsByUserId(@PathVariable Long userId,
             @PageableDefault(size = 3) Pageable pagination) {
 
-        Optional<UserEntity> user = userRepository.findById(userId);
+        Optional<UserEntity> optionalUser = userRepository.findById(userId);
 
-        if (user.isPresent()) {
-            Set<UserEntity> contactsSet = user.get().getContacts();
+        if (optionalUser.isPresent()) {
 
-            List<UserEntity> contactsList = new ArrayList<>(contactsSet);
+            UserEntity user = optionalUser.get();
+            Set<UserEntity> contactsSet = user.getContacts();
 
-            Page<UserEntity> contactsPage = new PageImpl<>(contactsList, pagination, contactsList.size());
+            List<UserResponseDTO> contactsList = contactsSet.stream()
+                .map(contact -> new UserResponseDTO(user)).collect(Collectors.toList());;
+
+            Page<UserResponseDTO> contactsPage = new PageImpl<>(contactsList, pagination, contactsList.size());
 
             return ResponseEntity.ok(contactsPage);
         } else {
