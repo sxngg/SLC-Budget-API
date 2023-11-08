@@ -7,12 +7,14 @@ import com.slcbudget.eventmanager.domain.UserEntity;
 import com.slcbudget.eventmanager.domain.dto.AddContactDTO;
 import com.slcbudget.eventmanager.domain.dto.CreateUserDTO;
 import com.slcbudget.eventmanager.domain.dto.EditUserDTO;
+import com.slcbudget.eventmanager.domain.dto.UserResponseDTO;
 import com.slcbudget.eventmanager.persistence.EventRepository;
 import com.slcbudget.eventmanager.persistence.UserRepository;
 import com.slcbudget.eventmanager.service.StorageService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -26,9 +28,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
-//@CrossOrigin //TODO AVERIGUAR
 @RestController
 @RequestMapping("/user")
 public class UserController {
@@ -40,16 +42,13 @@ public class UserController {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private MediaController mediaController;
-
-    @Autowired
     private StorageService storageService;
 
     @Autowired
     private EventRepository eventRepository;
 
     @GetMapping("/all")
-    public List <UserEntity> getAllUsers() {
+    public List<UserEntity> getAllUsers() {
         return (List<UserEntity>) userRepository.findAll();
     }
 
@@ -59,14 +58,23 @@ public class UserController {
     }
 
     @GetMapping("/email/{email}")
-    public UserEntity getUserByEmail(@PathVariable String email) {
-        return userRepository.findByEmail(email).get();
+    public ResponseEntity<UserResponseDTO> getUserByEmail(@PathVariable String email) {
+        Optional<UserEntity> user = userRepository.findByEmail(email);
+        if (user.isPresent()) {
+            UserEntity userEntity = user.get();
+            UserResponseDTO userResponse = new UserResponseDTO(userEntity.getId(), userEntity.getName(),
+                    userEntity.getLastName(), userEntity.getEmail(), userEntity.getUsername(),
+                    userEntity.getProfileImage());
+            return ResponseEntity.ok(userResponse);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PatchMapping("/update/{id}")
     public ResponseEntity<String> updateUser(@PathVariable Long id,
-                                             @RequestPart EditUserDTO updatedUser,
-                                             @RequestPart(required = false) MultipartFile profileImage) {
+            @RequestPart EditUserDTO updatedUser,
+            @RequestPart(required = false) MultipartFile profileImage) {
         // Recuperar el usuario existente de la base de datos
         Optional<UserEntity> optionalUser = userRepository.findById(id);
 
@@ -98,18 +106,18 @@ public class UserController {
         }
     }
 
-
     @PostMapping("/signup")
-    public ResponseEntity<?> createUser(@Valid @RequestPart("profileImage") MultipartFile profileImage,
-                                        @RequestPart("createUserDTO") CreateUserDTO createUserDTO) {
+    public ResponseEntity<?> createUser(@Valid @RequestPart(required = false) MultipartFile profileImage,
+            @RequestPart("createUserDTO") CreateUserDTO createUserDTO) {
 
         if (userRepository.existsByEmail(createUserDTO.getEmail())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("El correo electrónico ya está en uso.");
         }
-
         String imageUrl = null;
         try {
-            imageUrl = storageService.store(profileImage);
+            if (profileImage != null && !profileImage.isEmpty()) {
+                imageUrl = storageService.store(profileImage);
+            }
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al guardar la imagen de perfil");
         }
@@ -130,32 +138,44 @@ public class UserController {
                 .roles(roles)
                 .build();
 
-        userRepository.save(userEntity);
-
-        return ResponseEntity.ok(userEntity);
+        try {
+            userRepository.save(userEntity);
+            UserResponseDTO userResponseDTO = new UserResponseDTO(userEntity);
+            return ResponseEntity.ok(userResponseDTO);
+        } catch (Exception e) {
+          return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 
-
     @DeleteMapping("/delete/{id}")
-    public String deleteUser(@PathVariable("id") String id){
+    public String deleteUser(@PathVariable("id") String id) {
         userRepository.deleteById(Long.parseLong(id));
         return "Se ha borrado el user con id".concat(id);
     }
 
-    @GetMapping("{userId}/contacts")
-    public ResponseEntity<Set<UserEntity>> getContactsByUserId(@PathVariable Long userId) {
+    @GetMapping("/contacts/{userId}")
+    public ResponseEntity<Page<UserResponseDTO>> getContactsByUserId(@PathVariable Long userId,
+            @PageableDefault(size = 3) Pageable pagination) {
 
-        Optional<UserEntity> user = userRepository.findById(userId);
+        Optional<UserEntity> optionalUser = userRepository.findById(userId);
 
-        if (user.isPresent()) {
-            Set<UserEntity> contacts = user.get().getContacts();
-            return ResponseEntity.ok(contacts);
+        if (optionalUser.isPresent()) {
+
+            UserEntity user = optionalUser.get();
+            Set<UserEntity> contactsSet = user.getContacts();
+
+            List<UserResponseDTO> contactsList = contactsSet.stream()
+                .map(contact -> new UserResponseDTO(user)).collect(Collectors.toList());;
+
+            Page<UserResponseDTO> contactsPage = new PageImpl<>(contactsList, pagination, contactsList.size());
+
+            return ResponseEntity.ok(contactsPage);
         } else {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.badRequest().build();
         }
     }
 
-    @PostMapping("{userId}/add-contact")
+    @PostMapping("add-contact/{userId}")
     public ResponseEntity<?> addContact(@PathVariable Long userId, @RequestBody AddContactDTO contactId) {
 
         Optional<UserEntity> userOptional = userRepository.findById(userId);
@@ -177,10 +197,10 @@ public class UserController {
         }
     }
 
-    @GetMapping("/{userId}/events")
+    @GetMapping("/events/{userId}")
     public ResponseEntity<Page<Event>> getUserEvents(@PathVariable Long userId,
-        @PageableDefault(size = 3) Pageable pagination) {
-        
+            @PageableDefault(size = 3) Pageable pagination) {
+
         Page<Event> userEvents = eventRepository.findByOwnerId(userId, pagination);
 
         if (userEvents.isEmpty()) {

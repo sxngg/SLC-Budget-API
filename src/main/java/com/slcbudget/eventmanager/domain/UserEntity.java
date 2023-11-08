@@ -39,7 +39,7 @@ public class UserEntity {
     @NotBlank
     private String password;
 
-    @Column(name="profile_image")
+    @Column(name="profile_image", nullable = true)
     private String profileImage;
 
     @ManyToMany(fetch = FetchType.EAGER, targetEntity = RoleEntity.class, cascade = CascadeType.PERSIST)
