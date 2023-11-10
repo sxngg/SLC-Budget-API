@@ -1,8 +1,8 @@
 package com.slcbudget.eventmanager.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.slcbudget.eventmanager.domain.dto.EventDataDTO;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -36,7 +36,7 @@ public class Event {
   private String description;
   @Enumerated(EnumType.STRING)
   private TypeEvent type;
-  @NotBlank
+  @Column(nullable = true)
   private String picture;
 
   @ManyToOne
