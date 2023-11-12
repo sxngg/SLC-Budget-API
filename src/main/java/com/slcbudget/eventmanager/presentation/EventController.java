@@ -3,8 +3,12 @@ package com.slcbudget.eventmanager.presentation;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -16,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.slcbudget.eventmanager.domain.Activity;
 import com.slcbudget.eventmanager.domain.Event;
 import com.slcbudget.eventmanager.service.StorageService;
 import com.slcbudget.eventmanager.domain.UserEntity;
@@ -119,4 +124,10 @@ public class EventController {
     }
   }
 
+  @GetMapping("/activities/{eventId}")
+  public ResponseEntity<Page<Activity>> getActivitiesByEventId(@PathVariable Long eventId,
+    @PageableDefault(size = 3) Pageable pagination) {
+    Page<Activity> activities = eventRepository.findActivitiesByEventId(eventId, pagination);
+    return ResponseEntity.ok(activities);
+  }
 }

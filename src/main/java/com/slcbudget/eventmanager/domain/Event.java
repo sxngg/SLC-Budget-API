@@ -1,7 +1,11 @@
 package com.slcbudget.eventmanager.domain;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import com.slcbudget.eventmanager.domain.dto.EventDataDTO;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -11,6 +15,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -42,6 +47,9 @@ public class Event {
   @ManyToOne
   @JoinColumn(name = "owner_id")
   private UserEntity owner;
+
+  @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+  private Set<Activity> activities = new HashSet<>();
 
   public Event(EventDataDTO eventDataDTO, UserEntity owner, String profilePath) {
     this.name = eventDataDTO.name();
