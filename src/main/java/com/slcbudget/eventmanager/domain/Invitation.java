@@ -25,7 +25,7 @@ public class Invitation {
     private Long invitation_id;
 
     @ManyToOne
-    @JoinColumn(name = "evento_id")
+    @JoinColumn(name = "event_id")
     private Event event;
 
     @ManyToOne
@@ -39,5 +39,32 @@ public class Invitation {
         this.event = event;
         this.invitation_state = invitationState;
     }
+
+    @Override
+    public int hashCode() {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + ((invitation_id == null) ? 0 : invitation_id.hashCode());
+      result = prime * result + ((contact == null) ? 0 : contact.hashCode());
+      return result;
+    }
+  
+    @Override
+      public boolean equals(Object o) {
+        if (this == o) {
+          return true;
+        }
+        if (o == null) {
+          return false;
+        }
+  
+        if (o.getClass() != Invitation.class) {
+          return false;
+        }
+  
+        Invitation invitation = (Invitation) o;
+        return invitation.getInvitation_id().equals(this.invitation_id) &&
+          invitation.getContact().equals(this.contact);
+      }
 
 }

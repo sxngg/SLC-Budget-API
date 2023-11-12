@@ -13,7 +13,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.slcbudget.eventmanager.domain.EventContact;
+import com.slcbudget.eventmanager.domain.projections.EventContactProjection;
+import com.slcbudget.eventmanager.domain.projections.EventInfoProjection;
 import com.slcbudget.eventmanager.persistence.EventContactRepository;
+
 
 @RestController
 @RequestMapping("/event-contacts")
@@ -34,11 +37,19 @@ public class EventContactController {
   }
 
   @GetMapping("/by-event/{event_id}")
-  public ResponseEntity<Page<EventContact>> getEventContactsByEventId(@PathVariable Long event_id,
+  public ResponseEntity<Page<EventContactProjection>> getEventContactsByEventId(@PathVariable Long event_id,
       @PageableDefault(size = 3) Pageable pagination) {
 
-    Page<EventContact> eventContact = eventContactRepository.findEventContactByEventId(event_id, pagination);
+    Page<EventContactProjection> eventContact = eventContactRepository.findEventContactByEventId(event_id, pagination);
+    
     return ResponseEntity.ok(eventContact);
   }
 
+    @GetMapping("by-contact/{contactId}")
+  public ResponseEntity<Page<EventInfoProjection>> getEventsByContactId(@PathVariable Long contactId,
+    @PageableDefault(size = 3) Pageable pagination) {
+      Page<EventInfoProjection> events = eventContactRepository.findEventsByContactId(contactId, pagination);
+
+      return ResponseEntity.ok().body(events);
+  }
 }
