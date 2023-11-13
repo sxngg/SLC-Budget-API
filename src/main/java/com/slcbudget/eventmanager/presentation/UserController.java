@@ -1,6 +1,7 @@
 package com.slcbudget.eventmanager.presentation;
 
 import com.slcbudget.eventmanager.domain.ERole;
+import com.slcbudget.eventmanager.domain.Event;
 import com.slcbudget.eventmanager.domain.RoleEntity;
 import com.slcbudget.eventmanager.domain.UserEntity;
 import com.slcbudget.eventmanager.domain.dto.AddContactDTO;

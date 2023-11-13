@@ -8,14 +8,14 @@ public record EventResponseDTO(
     String description,
     TypeEvent type,
     Long owner_id,
-    String imageUrl
+    String picture
 ) {
-    public EventResponseDTO(Long eventId, EventDataDTO eventDataDTO, String imageUrl) {
-        this(eventId, eventDataDTO.name(), eventDataDTO.description(), eventDataDTO.type(), eventDataDTO.owner_id(), imageUrl);
+    public EventResponseDTO(Long eventId, EventDataDTO eventDataDTO, String picture) {
+        this(eventId, eventDataDTO.name(), eventDataDTO.description(), eventDataDTO.type(), eventDataDTO.owner_id(), picture);
     }
 
-    public EventResponseDTO(Long eventId, EventDataEditDTO eventDataEditDTO, String imageUrl, Long owner_id) {
-        this(eventId, eventDataEditDTO.name(), eventDataEditDTO.description(), eventDataEditDTO.type(), owner_id, imageUrl);
+    public EventResponseDTO(Long eventId, EventDataEditDTO eventDataEditDTO, String picture, Long owner_id) {
+        this(eventId, eventDataEditDTO.name(), eventDataEditDTO.description(), eventDataEditDTO.type(), owner_id, picture);
     }
 
 }
