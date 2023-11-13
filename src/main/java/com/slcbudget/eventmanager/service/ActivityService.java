@@ -97,6 +97,39 @@ public class ActivityService {
       return result;
     }
 
+    public Result<Activity> editActivity(Long activityId, ActivityCreateDTO activityDTO) {
+      Result<Activity> result = new Result<>();
+      try {
+          // Obtén la actividad existente
+          Activity existingActivity = activityRepository.findById(activityId)
+                  .orElseThrow(() -> new EntityNotFoundException("Actividad no encontrada con id: " + activityId));
+  
+          // Realiza las actualizaciones necesarias en la actividad existente
+          existingActivity.setDescription(activityDTO.description());
+          existingActivity.setValue(activityDTO.value());
+  
+          // Borra los participantes actuales (si es necesario) y guarda los nuevos
+          deleteParticipants(existingActivity);
+          saveParticipants(existingActivity, activityDTO.participationData());
+  
+          // Realiza las validaciones necesarias, por ejemplo, la suma de porcentajes o valores
+          validateActivity(existingActivity);
+  
+          // Guarda los cambios
+          activityRepository.save(existingActivity);
+  
+          // Actualiza los participantes y devuelve el resultado
+          existingActivity.setParticipants(activityParticipantsRepository.findByActivity(existingActivity));
+  
+          result.setSuccess(true);
+          result.setData(existingActivity);
+      } catch (Exception e) {
+          result.setSuccess(false);
+          result.setError("Error al editar la actividad: " + e.getMessage());
+      }
+      return result;
+    }
+
     public Result<Activity> getActivityById(Long activityId) {
       Result<Activity> result = new Result<>();
       try {
@@ -113,5 +146,45 @@ public class ActivityService {
       }
       return result;
     }
-}
+
+    private void saveParticipants(Activity activity, Map<Long, ActivityCreateDTO.ParticipationData> participationData) {
+      for (Map.Entry<Long, ActivityCreateDTO.ParticipationData> entry : participationData.entrySet()) {
+          Long participantId = entry.getKey();
+          ActivityCreateDTO.ParticipationData participantData = entry.getValue();
+  
+          UserEntity participant = userRepository.findById(participantId)
+                  .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con id: " + participantId));
+  
+          ActivityParticipants activityParticipant = new ActivityParticipants();
+          activityParticipant.setActivity(activity);
+          activityParticipant.setParticipant(participant);
+          activityParticipant.setParticipationPercent(participantData.participationPercentage());
+          activityParticipant.setStaticValueParticipation(participantData.staticValue());
+  
+          activityParticipantsRepository.save(activityParticipant);
+        }
+    }
+  
+    private void validateActivity(Activity activity) {
+      BigDecimal totalStaticValues = BigDecimal.ZERO;
+      BigDecimal totalPercent = BigDecimal.ZERO;
+  
+      for (ActivityParticipants participant : activityParticipantsRepository.findByActivity(activity)) {
+          totalStaticValues = totalStaticValues.add(participant.getStaticValueParticipation());
+          totalPercent = totalPercent.add(participant.getParticipationPercent());
+      }
+  
+      if (totalStaticValues.compareTo(activity.getValue()) > 0
+        || totalPercent.compareTo(BigDecimal.valueOf(100)) > 0) {
+          throw new RuntimeException("La sumatoria de los porcentajes o valores excede el límite.");
+      }
+    }
+
+    private void deleteParticipants(Activity activity) {
+      Set<ActivityParticipants> participantsToDelete = activity.getParticipants();
+      for (ActivityParticipants participant : participantsToDelete) {
+          activityParticipantsRepository.delete(participant);
+      }
+  }
+  }
 
