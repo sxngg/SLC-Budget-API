@@ -1,4 +1,4 @@
-package com.slcbudget.eventmanager.presentation;
+package com.slcbudget.eventmanager.presentation.event_contact;
 
 import java.util.Optional;
 

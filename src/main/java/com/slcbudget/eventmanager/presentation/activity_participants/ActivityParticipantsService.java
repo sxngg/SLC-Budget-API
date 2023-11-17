@@ -1,13 +1,10 @@
-package com.slcbudget.eventmanager.service;
+package com.slcbudget.eventmanager.presentation.activity_participants;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Service;
 
-import com.slcbudget.eventmanager.domain.Activity;
-import com.slcbudget.eventmanager.domain.ActivityParticipants;
 import com.slcbudget.eventmanager.domain.projections.ActivityParticipantsProjection;
 import com.slcbudget.eventmanager.persistence.ActivityParticipantsRepository;
 import com.slcbudget.eventmanager.utils.Result;

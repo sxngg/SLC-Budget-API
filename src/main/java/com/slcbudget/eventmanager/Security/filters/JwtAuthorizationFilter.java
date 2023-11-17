@@ -1,7 +1,8 @@
 package com.slcbudget.eventmanager.Security.filters;
 
 import com.slcbudget.eventmanager.Security.jwt.JwtUtils;
-import com.slcbudget.eventmanager.service.UserDetailsServiceImpl;
+import com.slcbudget.eventmanager.presentation.user.UserDetailsServiceImpl;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

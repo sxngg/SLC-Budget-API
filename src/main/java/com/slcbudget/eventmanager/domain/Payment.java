@@ -9,33 +9,33 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
 @Entity
-@Table(name = "event_contact")
-public class EventContact {
+public class Payment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long event_contact_id;
+    private Long id;
+
+    @ManyToOne
+    @JoinColumn(name = "payer_id")
+    private UserEntity payer;
+
+    @ManyToOne
+    @JoinColumn(name = "payee_id")
+    private UserEntity payee;
 
     @ManyToOne
     @JoinColumn(name = "event_id")
     private Event event;
 
-    @ManyToOne
-    @JoinColumn(name = "contact_id")
-    private UserEntity contact;
-
     @Column(nullable = false)
-    private BigDecimal balance = BigDecimal.ZERO;
+    private BigDecimal amount;
 }
 

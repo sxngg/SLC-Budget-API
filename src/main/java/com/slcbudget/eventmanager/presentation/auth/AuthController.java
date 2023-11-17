@@ -1,7 +1,6 @@
-package com.slcbudget.eventmanager.presentation;
+package com.slcbudget.eventmanager.presentation.auth;
 
 import com.slcbudget.eventmanager.Security.jwt.JwtUtils;
-import com.slcbudget.eventmanager.domain.dto.ValidTokenDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

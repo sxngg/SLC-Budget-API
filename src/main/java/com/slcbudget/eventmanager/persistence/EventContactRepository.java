@@ -10,6 +10,8 @@ import com.slcbudget.eventmanager.domain.EventContact;
 import com.slcbudget.eventmanager.domain.projections.EventContactProjection;
 import com.slcbudget.eventmanager.domain.projections.EventInfoProjection;
 
+import java.util.List;
+
 public interface EventContactRepository extends JpaRepository<EventContact, Long> {
 
   @Query("SELECT " +
@@ -19,10 +21,17 @@ public interface EventContactRepository extends JpaRepository<EventContact, Long
   "ec.contact.name as contactName, " + 
   "ec.contact.lastName as contactLastName, " + 
   "ec.contact.username as contactUsername, " + 
-  "ec.contact.profileImage as contactProfileImage " + 
+  "ec.contact.profileImage as contactProfileImage, " + 
+  "ec.balance as balance " +
   "FROM EventContact ec " + 
   "WHERE ec.event.id = :eventId")
   Page<EventContactProjection> findEventContactByEventId(@Param("eventId") Long eventId, Pageable pageable);
+
+  @Query("SELECT ec FROM EventContact ec WHERE ec.event.event_id = :eventId")
+  List<EventContactProjection> findEventContactByEventId(Long eventId);
+
+  @Query("SELECT ec FROM EventContact ec WHERE ec.event.event_id = :eventId")
+  List<EventContact> findEventContactWithoutProjectionByEventId(Long eventId);
 
   @Query("SELECT " + 
   "ec.event.event_id as event_id, " + 

@@ -3,7 +3,8 @@ package com.slcbudget.eventmanager.Security;
 import com.slcbudget.eventmanager.Security.filters.JwtAuthenticationFilter;
 import com.slcbudget.eventmanager.Security.filters.JwtAuthorizationFilter;
 import com.slcbudget.eventmanager.Security.jwt.JwtUtils;
-import com.slcbudget.eventmanager.service.UserDetailsServiceImpl;
+import com.slcbudget.eventmanager.presentation.user.UserDetailsServiceImpl;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
