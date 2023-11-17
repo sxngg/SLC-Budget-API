@@ -1,4 +1,4 @@
-package com.slcbudget.eventmanager.service;
+package com.slcbudget.eventmanager.presentation.user;
 
 import com.slcbudget.eventmanager.domain.UserEntity;
 import com.slcbudget.eventmanager.persistence.UserRepository;

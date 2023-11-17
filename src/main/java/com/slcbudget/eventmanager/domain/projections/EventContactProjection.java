@@ -1,5 +1,7 @@
 package com.slcbudget.eventmanager.domain.projections;
 
+import java.math.BigDecimal;
+
 public interface EventContactProjection {
     Long getEvent_contact_id();
     Long getContactId();
@@ -8,4 +10,5 @@ public interface EventContactProjection {
     String getContactLastName();
     String getContactUsername();
     String getContactProfileImage();
+    BigDecimal getBalance();
 }

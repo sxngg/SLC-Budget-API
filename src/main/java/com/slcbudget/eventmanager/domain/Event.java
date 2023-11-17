@@ -1,5 +1,6 @@
 package com.slcbudget.eventmanager.domain;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -48,6 +49,9 @@ public class Event {
   @JoinColumn(name = "owner_id")
   private UserEntity owner;
 
+  @Column(nullable = false)
+  private BigDecimal eventBalance = BigDecimal.ZERO;
+
   @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<Activity> activities = new HashSet<>();
 
@@ -57,6 +61,7 @@ public class Event {
     this.type = eventDataDTO.type();
     this.picture = profilePath;
     this.owner = owner;
+    this.eventBalance = new BigDecimal(0);
   }
 
 }

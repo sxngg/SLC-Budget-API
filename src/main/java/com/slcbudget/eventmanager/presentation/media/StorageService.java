@@ -1,4 +1,4 @@
-package com.slcbudget.eventmanager.service;
+package com.slcbudget.eventmanager.presentation.media;
 
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;

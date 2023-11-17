@@ -1,4 +1,4 @@
-package com.slcbudget.eventmanager.presentation;
+package com.slcbudget.eventmanager.presentation.user;
 
 import com.slcbudget.eventmanager.domain.ERole;
 import com.slcbudget.eventmanager.domain.Event;
@@ -11,7 +11,7 @@ import com.slcbudget.eventmanager.domain.dto.UserResponseDTO;
 import com.slcbudget.eventmanager.domain.projections.EventProjection;
 import com.slcbudget.eventmanager.persistence.EventRepository;
 import com.slcbudget.eventmanager.persistence.UserRepository;
-import com.slcbudget.eventmanager.service.StorageService;
+import com.slcbudget.eventmanager.presentation.media.StorageService;
 
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -136,6 +137,7 @@ public class UserController {
                 .name(createUserDTO.getName())
                 .lastName(createUserDTO.getLastName())
                 .profileImage(imageUrl)
+                .balance(new BigDecimal(0))
                 .roles(roles)
                 .build();
 

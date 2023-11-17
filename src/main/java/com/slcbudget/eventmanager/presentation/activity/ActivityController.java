@@ -1,10 +1,6 @@
-package com.slcbudget.eventmanager.presentation;
+package com.slcbudget.eventmanager.presentation.activity;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.slcbudget.eventmanager.domain.Activity;
 import com.slcbudget.eventmanager.domain.dto.ActivityCreateDTO;
-import com.slcbudget.eventmanager.service.ActivityService;
 import com.slcbudget.eventmanager.utils.Result;
 
 import jakarta.validation.Valid;
@@ -39,6 +34,7 @@ public class ActivityController {
         }
   }
 
+  /**
   @PutMapping("/edit/{activityId}")
   public ResponseEntity<?> editActivity(
     @PathVariable Long activityId,
@@ -52,6 +48,7 @@ public class ActivityController {
         return ResponseEntity.badRequest().body(result.getError());
     }
   }
+   */
 
 
   @GetMapping("{activityId}")

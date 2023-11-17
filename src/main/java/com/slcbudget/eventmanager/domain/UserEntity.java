@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.Set;
 
 @Data
@@ -41,6 +42,9 @@ public class UserEntity {
 
   @Column(name = "profile_image", nullable = true)
   private String profileImage;
+
+  @Column(nullable = false)
+  private BigDecimal balance = BigDecimal.ZERO;
 
   @ManyToMany(fetch = FetchType.EAGER, targetEntity = RoleEntity.class, cascade = CascadeType.PERSIST)
   @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
