@@ -12,6 +12,8 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -54,6 +56,14 @@ public class UserEntity {
   @JoinTable(name = "user_contacts", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "contact_id"))
   private Set<UserEntity> contacts;
 
+  @JsonIgnore
+  @OneToMany(mappedBy = "debtor")
+  private Set<Debt> debtor;
+
+  @JsonIgnore
+  @OneToMany(mappedBy = "creditor")
+  private Set<Debt> creditor;
+
   @Override
   public int hashCode() {
     final int prime = 31;
@@ -65,20 +75,37 @@ public class UserEntity {
   }
 
   @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null) {
-        return false;
-      }
-
-      if (o.getClass() != UserEntity.class) {
-        return false;
-      }
-
-      UserEntity user = (UserEntity) o;
-      return user.getEmail().equals(this.email) &&
-        user.getId().equals(this.id);
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
     }
+    if (o == null) {
+      return false;
+    }
+
+    if (o.getClass() != UserEntity.class) {
+      return false;
+    }
+
+    UserEntity user = (UserEntity) o;
+    return user.getEmail().equals(this.email) &&
+        user.getId().equals(this.id);
+  }
+
+  @Override
+  public String toString() {
+    return "UserEntity{" +
+        "id=" + id +
+        ", email='" + email + '\'' +
+        ", name='" + name + '\'' +
+        ", lastName='" + lastName + '\'' +
+        ", username='" + username + '\'' +
+        ", profileImage='" + profileImage + '\'' +
+        ", balance=" + balance +
+        ", roles=" + roles +
+        ", contacts=" + contacts +
+        ", debtor=" + debtor.size() +
+        ", creditor=" + creditor.size() +
+        '}';
+  }
 }

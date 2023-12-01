@@ -5,13 +5,11 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -25,10 +23,12 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.slcbudget.eventmanager.domain.Activity;
 import com.slcbudget.eventmanager.domain.Event;
+import com.slcbudget.eventmanager.domain.EventContact;
 import com.slcbudget.eventmanager.domain.UserEntity;
 import com.slcbudget.eventmanager.domain.dto.EventDataDTO;
 import com.slcbudget.eventmanager.domain.dto.EventDataEditDTO;
 import com.slcbudget.eventmanager.domain.dto.EventResponseDTO;
+import com.slcbudget.eventmanager.persistence.EventContactRepository;
 import com.slcbudget.eventmanager.persistence.EventRepository;
 import com.slcbudget.eventmanager.persistence.UserRepository;
 import com.slcbudget.eventmanager.presentation.media.StorageService;
@@ -41,6 +41,9 @@ public class EventController {
 
   @Autowired
   private EventRepository eventRepository;
+
+  @Autowired
+  private EventContactRepository eventContactRepository;
 
   @Autowired
   private UserRepository userRepository;
@@ -84,6 +87,12 @@ public class EventController {
     if (userOptional.isPresent()) {
       UserEntity user = userOptional.get();
       Event event = eventRepository.save(new Event(eventDataDTO, user, imageUrl));
+
+      EventContact eventContact = new EventContact();
+      eventContact.setEvent(event);
+      eventContact.setContact(user);
+      eventContactRepository.save(eventContact);
+
       URI url = uriComponentsBuilder.path("/event/{id}").buildAndExpand(event.getEvent_id()).toUri();
 
       EventResponseDTO responseDTO = new EventResponseDTO(event.getEvent_id(), eventDataDTO, imageUrl);
