@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.slcbudget.eventmanager.domain.dto.EventDataDTO;
 
 import jakarta.persistence.CascadeType;
@@ -52,6 +53,7 @@ public class Event {
   @Column(nullable = false)
   private BigDecimal eventBalance = BigDecimal.ZERO;
 
+  @JsonIgnore
   @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
   private Set<Activity> activities = new HashSet<>();
 

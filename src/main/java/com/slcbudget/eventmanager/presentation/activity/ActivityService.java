@@ -1,25 +1,35 @@
 package com.slcbudget.eventmanager.presentation.activity;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Map;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.slcbudget.eventmanager.domain.Activity;
 import com.slcbudget.eventmanager.domain.ActivityParticipants;
+import com.slcbudget.eventmanager.domain.Debt;
 import com.slcbudget.eventmanager.domain.Event;
+import com.slcbudget.eventmanager.domain.EventContact;
+import com.slcbudget.eventmanager.domain.Payment;
 import com.slcbudget.eventmanager.domain.UserEntity;
 import com.slcbudget.eventmanager.domain.dto.ActivityCreateDTO;
 import com.slcbudget.eventmanager.persistence.ActivityParticipantsRepository;
 import com.slcbudget.eventmanager.persistence.ActivityRepository;
+import com.slcbudget.eventmanager.persistence.DebtRepository;
+import com.slcbudget.eventmanager.persistence.EventContactRepository;
 import com.slcbudget.eventmanager.persistence.EventRepository;
+import com.slcbudget.eventmanager.persistence.PaymentRepository;
 import com.slcbudget.eventmanager.persistence.UserRepository;
+import com.slcbudget.eventmanager.presentation.event_contact.EventContactService;
 import com.slcbudget.eventmanager.utils.Result;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
+import java.util.Set;
 
 @Service
 public class ActivityService {
@@ -31,6 +41,9 @@ public class ActivityService {
   private ActivityParticipantsRepository activityParticipantsRepository;
 
   @Autowired
+  private EventContactRepository eventContactRepository;
+
+  @Autowired
   private UserRepository userRepository;
 
   @Autowired
@@ -38,6 +51,15 @@ public class ActivityService {
 
   @Autowired
   private BalanceService balanceService;
+
+  @Autowired
+  private PaymentRepository paymentRepository;
+
+  @Autowired
+  private DebtRepository debtRepository;
+
+  @Autowired
+  private EventContactService eventContactService;
 
   @Transactional
   public Result<Activity> createActivity(ActivityCreateDTO activityDTO) {
@@ -49,6 +71,7 @@ public class ActivityService {
       Activity activity = new Activity();
       activity.setDescription(activityDTO.description());
       activity.setValue(activityDTO.value());
+      activity.setIsPaid(false);
       activity.setEvent(event);
       activityRepository.save(activity);
 
@@ -96,6 +119,73 @@ public class ActivityService {
       result.setError("Error al crear la actividad: " + e.getMessage());
     }
     return result;
+  }
+
+  
+  public void payDebts(Activity activity, UserEntity payer, BigDecimal totalAmount, Long eventId) {
+    Set<ActivityParticipants> participants = activity.getParticipants();
+    // Calcular el porcentaje del total que cada participante debe asumir
+    BigDecimal totalParticipants = BigDecimal.valueOf(participants.size());
+    BigDecimal perParticipantAmount = totalAmount.divide(totalParticipants, RoundingMode.HALF_UP);
+
+    // Iterar sobre los participantes y saldar sus deudas
+    for (ActivityParticipants participant : participants) {
+      UserEntity participantUser = participant.getParticipant();
+      if (!participantUser.equals(payer)) {
+        // Calcular el nuevo saldo para el participante
+        BigDecimal participantBalance = participantUser.getBalance().subtract(perParticipantAmount);
+        // Actualizar el saldo del participante
+        participantUser.setBalance(participantBalance);
+
+        // Guardar en la base de datos
+        userRepository.save(participantUser);
+        EventContact eventContact = eventContactService.getEventContactByContactId(participantUser.getId(), eventId);
+        BigDecimal eventContactBalance = eventContact.getBalance().subtract(perParticipantAmount);
+        eventContact.setBalance(eventContactBalance);
+        eventContactRepository.save(eventContact);
+        BigDecimal activityParticipantsBalance = participant.getBalance().subtract(perParticipantAmount);
+        participant.setBalance(activityParticipantsBalance);
+        activityParticipantsRepository.save(participant);
+
+        // Generar deuda
+        Debt existingDebt = debtRepository.findByDebtorAndCreditor(participantUser, payer);
+        Debt existingDebtInverse = debtRepository.findByDebtorAndCreditor(payer, participantUser);
+
+        if (existingDebtInverse != null && existingDebtInverse.getAmount().compareTo(BigDecimal.ZERO) > 0) {
+          //Si el que paga tiene una deuda con el participante entonces el pagador le tiene que pagar
+          BigDecimal existingDebtAmount = existingDebtInverse.getAmount().subtract(perParticipantAmount);
+          existingDebtInverse.setAmount(existingDebtAmount);
+          
+          debtRepository.save(existingDebtInverse);
+        } else if (existingDebt != null) {
+          // Si el participante tiene una deuda con el pagador entonces se aumenta la deuda
+          BigDecimal existingDebtAmount = existingDebt.getAmount().add(perParticipantAmount);
+          existingDebt.setAmount(existingDebtAmount);
+
+          debtRepository.save(existingDebt);
+        } else {
+          // Si no hay deuda existente, crear una nueva deuda
+          Debt newDebt = new Debt();
+          newDebt.setDebtor(participantUser);
+          newDebt.setCreditor(payer);
+          newDebt.setAmount(perParticipantAmount);
+          newDebt.setPaid(false);
+          debtRepository.save(newDebt);
+        }
+      }
+    }
+
+    activity.setIsPaid(true);
+    activityRepository.save(activity);
+
+    BigDecimal payerBalance = payer.getBalance().subtract(perParticipantAmount);
+    payer.setBalance(payerBalance);
+    userRepository.save(payer);
+
+    EventContact payerEventContact = eventContactService.getEventContactByContactId(payer.getId(), eventId);
+    BigDecimal payerEventContactBalance = payerEventContact.getBalance().subtract(perParticipantAmount);
+    payerEventContact.setBalance(payerEventContactBalance);
+    eventContactRepository.save(payerEventContact);
   }
 
   /**

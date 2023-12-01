@@ -46,4 +46,7 @@ public interface EventContactRepository extends JpaRepository<EventContact, Long
   "ec.event.owner.profileImage as ownerProfileImage " + 
   "FROM EventContact ec WHERE ec.contact.id = :contactId")
   Page<EventInfoProjection> findEventsByContactId(@Param("contactId") Long contactId, Pageable pageable);
+
+  @Query("SELECT ec FROM EventContact ec WHERE ec.contact.id = :contactId AND ec.event.event_id = :eventId")
+  EventContact findByContactIdAndEventId(@Param("contactId") Long contactId, @Param("eventId") Long eventId);
 }

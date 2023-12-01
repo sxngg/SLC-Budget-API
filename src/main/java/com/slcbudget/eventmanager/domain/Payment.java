@@ -1,6 +1,7 @@
 package com.slcbudget.eventmanager.domain;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -24,12 +25,12 @@ public class Payment {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "payer_id")
-    private UserEntity payer;
+    @JoinColumn(name = "activity_id")
+    private Activity activity;
 
     @ManyToOne
-    @JoinColumn(name = "payee_id")
-    private UserEntity payee;
+    @JoinColumn(name = "payer_id")
+    private UserEntity payer;
 
     @ManyToOne
     @JoinColumn(name = "event_id")
@@ -37,5 +38,8 @@ public class Payment {
 
     @Column(nullable = false)
     private BigDecimal amount;
+
+    @Column(columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    private LocalDateTime payDate;
 }
 

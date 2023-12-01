@@ -2,6 +2,8 @@ package com.slcbudget.eventmanager.domain;
 
 import java.math.BigDecimal;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -27,6 +29,7 @@ public class EventContact {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long event_contact_id;
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "event_id")
     private Event event;

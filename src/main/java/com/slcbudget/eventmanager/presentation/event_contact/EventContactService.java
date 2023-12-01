@@ -5,6 +5,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import com.slcbudget.eventmanager.domain.Event;
+import com.slcbudget.eventmanager.domain.EventContact;
 import com.slcbudget.eventmanager.domain.projections.EventContactProjection;
 import com.slcbudget.eventmanager.persistence.EventContactRepository;
 
@@ -17,5 +19,9 @@ public class EventContactService {
     public List<EventContactProjection> getEventContactsByEventId(Long eventId) {
         System.out.println("service event contact" + eventId);
         return eventContactRepository.findEventContactByEventId(eventId);
+    }
+
+    public EventContact getEventContactByContactId(Long contactId, Long eventId) {
+         return eventContactRepository.findByContactIdAndEventId(contactId, eventId);
     }
 }

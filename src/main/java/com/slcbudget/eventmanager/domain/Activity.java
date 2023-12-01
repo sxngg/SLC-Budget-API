@@ -18,6 +18,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -42,6 +44,11 @@ public class Activity {
   @ManyToOne
   @JoinColumn(name = "event_id")
   private Event event;
+
+  @OneToMany(mappedBy = "activity")
+  private List<Payment> payments;
+
+  private Boolean isPaid;
 
   @Override
   public int hashCode() {

@@ -69,7 +69,7 @@ public class BalanceService {
     List<EventContact> eventContacts = eventContactRepository.findEventContactWithoutProjectionByEventId(eventId);
 
     Optional<EventContact> eventContactOptional = eventContacts.stream()
-        .filter(contact -> contact.getEvent_contact_id() == participantId)
+        .filter(contact -> contact.getContact().getId() == participantId)
         .findFirst();
 
     if (eventContactOptional.isPresent()) {
